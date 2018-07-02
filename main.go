@@ -3,7 +3,6 @@ package main
 import (
 	"net"
 	"fmt"
-	"encoding/hex"
 	"encoding/binary"
 )
 
@@ -33,11 +32,39 @@ func main(){
 		buf := make([]byte,4048)
 		n, a, err := conn.ReadFrom(buf)
 		fmt.Println(n, a, err )
-		fmt.Println(hex.Dump(buf))
+		//fmt.Println(hex.Dump(buf))
 		data := binary.BigEndian.Uint32(buf[:4])
 		fmt.Printf("%b %X %X \n", data, data, data|0xFF000000) //buf[1]&8, buf[1]&4
+		fmt.Printf("Sync byte: ASCII %c %t \n", buf[0], buf[0]==0x47)
+		fmt.Printf("Transport Error Indicator: %b \n", data & 0x800000)
+		fmt.Printf("Payload Unit Start Indicator : %b \n", data & 0x400000)
+		fmt.Printf("Transport Priority: %b \n", data & 0x200000)
+		fmt.Printf("PID: %b \n", data & 0x1fff00)
+		fmt.Printf("Transport Scrambling Control : %b\n", data & 0xc0)
+		switch data & 0xc0 {
+		case 0x0:
+			fmt.Println("Not scrambled")
+		case 0x40:
+			fmt.Println("Reserved for future use")
+		case 0x80:
+			fmt.Println("Scrambled with even key")
+		case 0xC0:
+			fmt.Println("Scrambled with odd key")
+		}
+		fmt.Printf("Adaptation field control : %b\n", data & 0x30)
+		switch data & 0x30 {
+		case 1<<4: //10000
+			fmt.Println("no adaptation field, payload only")
+		case 1<<5: //100000
+			fmt.Println("adaptation field only, no payload")
+		case 1<<5 | 1: // 110000
+			fmt.Println("adaptation field followed by payload")
+		default:
+			fmt.Println("RESERVED for future use")
+		}
+		fmt.Printf("Continuity counter : %b\n", data & 0xf)
 		//fmt.Printf("%s \n", buf)
-		break
+		//break
 		//file.Write(buf)
 	}
 
