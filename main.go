@@ -31,7 +31,7 @@ func main(){
 		conn.SetReadBuffer(4048)
 		buf := make([]byte,4048)
 		n, a, err := conn.ReadFrom(buf)
-		fmt.Println(n, a, err )
+		fmt.Printf("Get %d bytes packet from %s. Error %v \n", n, a, err )
 		//fmt.Println(hex.Dump(buf))
 		data := binary.BigEndian.Uint32(buf[:4])
 		fmt.Printf("%b %X %X \n", data, data, data|0xFF000000) //buf[1]&8, buf[1]&4
@@ -63,8 +63,15 @@ func main(){
 			fmt.Println("RESERVED for future use")
 		}
 		fmt.Printf("Continuity counter : %b\n", data & 0xf)
+		// first 3 bytes of payload has to 0x000001 ; buf[4:8] is called the 32 bit start code.
+		if buf[4] == 0x00 && buf[5] == 0x00 && buf[6] == 0x01 {
+			fmt.Println("Packet start code prefix")
+		}
+		fmt.Printf("Stream id %x\n", buf[7])
+		lenPesPacket := binary.BigEndian.Uint16(buf[8:10])
+		fmt.Printf("PES Packet length %d \n", lenPesPacket)
 		//fmt.Printf("%s \n", buf)
-		//break
+		break
 		//file.Write(buf)
 	}
 
