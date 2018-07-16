@@ -68,6 +68,12 @@ func main(){
 			fmt.Println("Packet start code prefix")
 		}
 		fmt.Printf("Stream id %x\n", buf[7])
+		if buf[7] >= 0xE0 && 0xEF <= buf[7] {
+			fmt.Println("Video stream")
+		}
+		if buf[7] >= 0xC0 && 0xDF <= buf[7] {
+			fmt.Println("Audio stream")
+		}
 		lenPesPacket := binary.BigEndian.Uint16(buf[8:10])
 		fmt.Printf("PES Packet length %d \n", lenPesPacket)
 		//fmt.Printf("%s \n", buf)
